@@ -1,0 +1,10 @@
+html/
+var/cache/prod/*
+var/log/*
+.cicd/terraform/.terraform
+deploy.sh
+build.sh
+.env.*
+!.env.test
+vendor
+Dockerfile

@@ -1,0 +1,8 @@
+# aws_account_id is only required if terraform is running locally. If running through TF cloud it will be provider automatically
+#aws_account_id = ""
+environment = "$ENVIRONMENT"
+namespace = "$NAMESPACE"
+region = "ap-southeast-2"
+app_name = "ses-dashboard"
+# Update version as per build tag
+app_version = "fc4cc70b-local"

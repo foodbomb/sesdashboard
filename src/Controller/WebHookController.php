@@ -7,6 +7,8 @@ namespace App\Controller;
 use App\Entity\Project;
 use App\Repository\EmailRepository;
 use App\Utils\WebHookProcessor;
+use Aws\Sns\Message;
+use Aws\Sns\MessageValidator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,9 +27,11 @@ class WebHookController extends BaseController
                           WebHookProcessor $processor,
                           HttpClientInterface $httpClient)
     {
+        if(!$this->isRequestSignatureValid()) {
+            return new Response('Unauthorized Request', Response::HTTP_FORBIDDEN);
+        }
 
         $jsonData = json_decode($request->getContent(), true);
-
         if ($jsonData === false) {
             return new Response('Error', Response::HTTP_BAD_REQUEST);
         }
@@ -44,6 +48,10 @@ class WebHookController extends BaseController
             return new Response('Not Ok', Response::HTTP_BAD_REQUEST);
         }
 
+        $expectedKey = 'Message';
+        if(array_key_exists($expectedKey, $jsonData)) {
+            $jsonData = json_decode($jsonData[$expectedKey], true);
+        }
         // Process mail.
         // Try to find mail.
         $email = $emailRepository->findOneBy([
@@ -69,5 +77,19 @@ class WebHookController extends BaseController
         $em->flush();
 
         return new Response('Ok');
+    }
+    protected function isRequestSignatureValid(): bool
+    {
+        try {
+            $message = Message::fromRawPostData();
+            $validator = new MessageValidator();
+            $validator->validate($message);
+        } catch (Exception $e) {
+//            Log::warning('Invalid SES Signature', context: ['exception' => $e]);
+            print('Invalid SES Signature');
+            return false;
+        }
+
+        return true;
     }
 }
