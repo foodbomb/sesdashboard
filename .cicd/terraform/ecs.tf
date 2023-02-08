@@ -7,7 +7,7 @@ locals {
   cluster_name       = data.aws_ecs_cluster.main.cluster_name
   memory_reservation = 256
   dd_service         = var.app_name
-  all_secrets        = [
+  all_secrets = [
     aws_ssm_parameter.db_host,
     aws_ssm_parameter.db_port,
     aws_ssm_parameter.db_name,
@@ -23,7 +23,7 @@ locals {
       aws_ssm_parameter.dashboard_admin_username,
       data.aws_ssm_parameter.mailer_region,
       data.aws_ssm_parameter.mailer_default_configuration_set,
-    ]: {
+      ] : {
       value = user_detail.value
       name  = upper(reverse(split("/", user_detail.name, ))[0])
     }
@@ -59,8 +59,8 @@ resource "aws_ecs_task_definition" "api" {
 
   container_definitions = jsonencode([
     {
-      name    = local.container_name
-      image   = local.container_image,
+      name  = local.container_name
+      image = local.container_image,
       command = [
         "/bin/bash",
         "-c",
@@ -68,65 +68,30 @@ resource "aws_ecs_task_definition" "api" {
       ],
       memoryReservation = local.memory_reservation,
       cpu               = 0,
-      portMappings      = [
+      portMappings = [
         {
           hostPort      = 0,
           containerPort = local.container_port,
           protocol      = "tcp"
         }
       ],
-      essential   = true,
+      essential = true,
       environment = concat(local.environment_variables, [
         {
-          name  = "DD_SERVICE",
-          value = local.container_name
-        },
-        {
+          # This env var has to have `prod` as its value because so decided Symfony and, if you change, some things breaks sometimes.
           name  = "APP_ENV",
-          value = var.environment
+          value = "prod"
         },
         {
-          name  = "APP_DEBUG",
+          name  = "APP_DEBUG"
           value = "0"
-        },
-        {
-          name  = "DD_TRACE_ANALYTICS_ENABLED"
-          value = "true"
-        },
-        {
-          name  = "DD_TRACE_ENABLED"
-          value = "true"
-        },
-        {
-          name  = "DD_TRACE_CURL_ANALYTICS_ENABLED"
-          value = "true"
-        },
-        {
-          name  = "DD_TRACE_ELOQUENT_ANALYTICS_ENABLED"
-          value = "true"
-        },
-        {
-          name  = "DD_TRACE_GUZZLE_ANALYTICS_ENABLED"
-          value = "true"
-        },
-        {
-          name  = "DD_TRACE_LARAVEL_ANALYTICS_ENABLED"
-          value = "true"
-        },
-        {
-          name  = "DD_TRACE_LUMEN_ANALYTICS_ENABLED"
-          value = "true"
-        },
-        {
-          name  = "DD_TRACE_PDO_ANALYTICS_ENABLED"
-          value = "true"
-        },
+        }
       ])
-      secrets      = local.environment_secrets
+      secrets = local.environment_secrets
       dockerLabels = {
         "com.datadoghq.tags.env"     = var.environment
         "com.datadoghq.tags.version" = var.app_version
-        "com.datadoghq.ad.logs"      = jsonencode([
+        "com.datadoghq.ad.logs" = jsonencode([
           {
             source  = "apache"
             service = var.app_name
@@ -135,10 +100,13 @@ resource "aws_ecs_task_definition" "api" {
       },
     },
   ])
+  tags = {
+    Name = "${local.default_prefix} Task definition"
+  }
 }
 
 resource "aws_lb_target_group" "this" {
-  name     = "${local.default_prefix}"
+  name     = local.default_prefix
   port     = 80
   protocol = "HTTP"
   vpc_id   = data.aws_vpc.main.id
@@ -173,7 +141,6 @@ resource "aws_lb_listener_rule" "api" {
 }
 
 resource "aws_ecs_service" "this" {
-  #  depends_on              = [module.db-migration]
   name                    = local.default_prefix
   cluster                 = data.aws_ecs_cluster.main.cluster_name
   task_definition         = aws_ecs_task_definition.api.arn

@@ -85,7 +85,7 @@ resource "mysql_user" "app_user" {
 
   lifecycle {
     ignore_changes = [
-#      plaintext_password
+      #      plaintext_password
     ]
   }
 }
@@ -95,11 +95,11 @@ resource "mysql_grant" "attach_write_privileges" {
     mysql_database.schema,
     mysql_user.app_user
   ]
-  database   = aws_ssm_parameter.db_name.value
-  user       = aws_ssm_parameter.db_user.value
-  host       = "%"
-  table      = "*"
-  grant      = true
+  database = aws_ssm_parameter.db_name.value
+  user     = aws_ssm_parameter.db_user.value
+  host     = "%"
+  table    = "*"
+  grant    = true
   privileges = [
     "ALL"
   ]

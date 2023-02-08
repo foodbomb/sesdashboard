@@ -2,8 +2,8 @@ ENV=${1,,}
 
 function allow_connection_to_db() {
   SG_NAME=$1
-  SECURITY_GROUP_ID=$(aws ec2 --profile admin describe-security-groups --filter=Name=group-name,Values=$METABASE_SG_NAME | jq -r .SecurityGroups[0].GroupId)
-  SECURITY_RULE_ID=$(aws ec2 --region ap-southeast-2 authorize-security-group-ingress --group-id $SECURITY_GROUP_ID --ip-permissions IpProtocol=tcp,FromPort=3306,ToPort=3306,IpRanges="[{CidrIp=0.0.0.0/0,Description='Temporary Terraform Cloud'}]" | jq -r .SecurityGroupRules[0].SecurityGroupRuleId)
+  SECURITY_GROUP_ID=$(aws ec2 describe-security-groups --filter=Name=group-name,Values=$METABASE_SG_NAME | jq -r .SecurityGroups[0].GroupId)
+  SECURITY_RULE_ID=$(aws ec2 authorize-security-group-ingress --group-id $SECURITY_GROUP_ID --ip-permissions IpProtocol=tcp,FromPort=3306,ToPort=3306,IpRanges="[{CidrIp=0.0.0.0/0,Description='Temporary Terraform Cloud'}]" | jq -r .SecurityGroupRules[0].SecurityGroupRuleId)
   echo "$SECURITY_GROUP_ID $SECURITY_RULE_ID"
 }
 
@@ -13,7 +13,7 @@ function revoke_db_access(){
   SECURITY_GROUP_ID=$1
   SECURITY_RULE_ID=$2
 
-  aws --region ap-southeast-2 ec2 revoke-security-group-ingress --group-id $SECURITY_GROUP_ID --security-group-rule-ids $SECURITY_RULE_ID > /dev/null
+  aws ec2 revoke-security-group-ingress --group-id $SECURITY_GROUP_ID --security-group-rule-ids $SECURITY_RULE_ID > /dev/null
 }
 
 if [ "" == "$1" ]; then

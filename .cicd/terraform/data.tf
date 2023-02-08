@@ -18,24 +18,28 @@ data "aws_lb_listener" "listener_443" {
   port              = 443
 }
 
+data "aws_ssm_parameter" "mailer_ssh_default_path" {
+  name = "/${var.environment}/mailer-ssm-default-path"
+}
+
 data "aws_ssm_parameter" "mailer_access_key_id" {
-  name = "/${var.environment}/mailer/ACCESS_KEY_ID"
+  name = "${data.aws_ssm_parameter.mailer_ssh_default_path.value}/ACCESS_KEY_ID"
 }
 
 data "aws_ssm_parameter" "mailer_access_key_secret" {
-  name = "/${var.environment}/mailer/ACCESS_KEY_SECRET"
+  name = "${data.aws_ssm_parameter.mailer_ssh_default_path.value}/ACCESS_KEY_SECRET"
 }
 
 data "aws_ssm_parameter" "mailer_region" {
-  name = "/${var.environment}/mailer/REGION"
+  name = "${data.aws_ssm_parameter.mailer_ssh_default_path.value}/REGION"
 }
 
 data "aws_ssm_parameter" "mailer_default_configuration_set" {
-  name = "/${var.environment}/mailer/DEFAULT_CONFIGURATION_SET"
+  name = "${data.aws_ssm_parameter.mailer_ssh_default_path.value}/DEFAULT_CONFIGURATION_SET"
 }
 
 data "aws_ssm_parameter" "mailer_events_topic_arn" {
-  name = "/${var.environment}/mailer/MAIL_EVENTS_TOPIC_ARN"
+  name = "${data.aws_ssm_parameter.mailer_ssh_default_path.value}/MAIL_EVENTS_TOPIC_ARN"
 }
 
 data "aws_ecr_repository" "ses_dashboard" {

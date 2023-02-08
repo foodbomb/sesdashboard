@@ -5,4 +5,4 @@ environment = "$ENVIRONMENT"
 namespace = "$NAMESPACE"
 app_name = "ses-dashboard"
 # Update version as per build tag
-app_version = "fc4cc70b-local"
+app_version = "96e890f1-local"
