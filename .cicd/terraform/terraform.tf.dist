@@ -1,0 +1,26 @@
+terraform {
+  cloud {
+    organization = "foodbomb"
+
+    workspaces {
+      tags = [
+        "env:$ENVIRONMENT",
+        "namespace:$NAMESPACE",
+        "app_name:ses-dashboard",
+        "tier:application"
+      ]
+    }
+  }
+
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+    }
+    mysql = {
+      # Using this one in favour of the offical hashcorp/mysql because the later one is abandoned.
+      source  = "petoju/mysql"
+      version = "~> 3.0.29"
+    }
+  }
+  required_version = "~> 1.2.3"
+}

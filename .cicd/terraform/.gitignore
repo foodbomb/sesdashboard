@@ -1,0 +1,4 @@
+.terraform
+variables.auto.tfvars
+variables.tfvars
+terraform.tf

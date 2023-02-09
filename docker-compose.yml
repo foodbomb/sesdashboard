@@ -11,31 +11,38 @@ services:
       image: mysql:8.0
       container_name: sesdashboard-mysql
       working_dir: /application
+      command: --default-authentication-plugin=mysql_native_password
       volumes:
         - .:/application
         - sesdashboard-mysql-datavolume:/var/lib/mysql
-#      ports:
-#        - "8085:3306"
-
-    webserver:
-      restart: unless-stopped
-      image: nginx:alpine
-      container_name: sesdashboard-webserver
-      working_dir: /application
-      volumes:
-          - .:/application
-          - ./phpdocker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
       ports:
-       - "80:80"
+        - "8085:3306"
+      networks:
+        - fbnet
 
-    php-fpm:
+    sesdashboard:
       restart: unless-stopped
-      build: phpdocker/php-fpm
-      container_name: sesdashboard-php-fpm
-      working_dir: /application
+      build:
+        context: .
+      image: sesdashboard:local
+      container_name: sesdashboard
+      working_dir: /var/www/
       volumes:
-        - '.:/application'
-        - './phpdocker/php-fpm/php-ini-overrides.ini:/etc/php/8.1/fpm/conf.d/99-overrides.ini'
+        - '.:/var/www/'
+      environment:
+        VIRTUAL_HOST: ses.dashboard.fb.localhost
+      env_file:
+        - ./.env.local
+      command: ["/bin/bash", "-c", "make init_within_container && apache2-foreground"]
+      networks:
+        - fbnet
+
 volumes:
   sesdashboard-mysql-datavolume:
     driver: local
+
+
+networks:
+  fbnet:
+    external: true
+    name: fbnet
